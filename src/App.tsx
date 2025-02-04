@@ -18,17 +18,17 @@ export const App = () => {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [selectedPost, setSelectedPost] = useState<Post | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [err, setErr] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
 
   const shouldShowPosts = selectedUser && !isLoading && posts.length > 0;
   const shouldShowNoPosts =
-    selectedUser && !isLoading && posts.length === 0 && !err;
+    selectedUser && !isLoading && posts.length === 0 && !error;
 
   useEffect(() => {
     client
       .get<User[]>('/users')
       .then(setUsers)
-      .catch(() => setErr(true));
+      .catch(() => setError('Unable to load users'));
   }, []);
 
   useEffect(() => {
@@ -36,11 +36,12 @@ export const App = () => {
       setIsLoading(true);
       setPosts([]);
       setSelectedPost(null);
+      setError(null);
 
       client
         .get<Post[]>(`/posts?userId=${selectedUser.id}`)
         .then(setPosts)
-        .catch(() => setErr(true))
+        .catch(() => setError('Unable to load posts'))
         .finally(() => setIsLoading(false));
     }
   }, [selectedUser]);
@@ -66,12 +67,12 @@ export const App = () => {
 
                 {isLoading && <Loader />}
 
-                {err && (
+                {error && (
                   <div
                     className="notification is-danger"
                     data-cy="PostsLoadingError"
                   >
-                    Something went wrong!
+                    {error}
                   </div>
                 )}
 

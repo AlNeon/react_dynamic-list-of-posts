@@ -4,7 +4,7 @@ import cn from 'classnames';
 import { Comment } from 'types/Comment';
 
 type Props = {
-  onSubmit: (comment: Comment) => Promise<void>;
+  onSubmit: (comment: Omit<Comment, 'id' | 'postId'>) => Promise<void>;
   isSubmitting: boolean;
 };
 
@@ -36,8 +36,10 @@ export const NewCommentForm: React.FC<Props> = ({ onSubmit, isSubmitting }) => {
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
     setHasNameError(!name.trim());
-    setHasEmailError(!email.trim());
+    setHasEmailError(!emailRegex.test(email.trim()));
     setHasCommentError(!comment.trim());
 
     if (!name.trim() || !email.trim() || !comment.trim()) {
@@ -45,8 +47,6 @@ export const NewCommentForm: React.FC<Props> = ({ onSubmit, isSubmitting }) => {
     }
 
     onSubmit({
-      id: 0,
-      postId: 0,
       name,
       email,
       body: comment,
@@ -63,7 +63,7 @@ export const NewCommentForm: React.FC<Props> = ({ onSubmit, isSubmitting }) => {
   };
 
   return (
-    <form data-cy="NewCommentForm" onSubmit={handleSubmit}>
+    <form data-cy="NewCommentForm" onSubmit={handleSubmit} onReset={resetForm}>
       <div className="field" data-cy="NameField">
         <label className="label" htmlFor="comment-author-name">
           Author Name
@@ -96,7 +96,7 @@ export const NewCommentForm: React.FC<Props> = ({ onSubmit, isSubmitting }) => {
 
         {hasNameError && (
           <p className="help is-danger" data-cy="ErrorMessage">
-            Name is required
+            Please provide your name
           </p>
         )}
       </div>
@@ -133,7 +133,7 @@ export const NewCommentForm: React.FC<Props> = ({ onSubmit, isSubmitting }) => {
 
         {hasEmailError && (
           <p className="help is-danger" data-cy="ErrorMessage">
-            Email is required
+            Please enter a valid email address
           </p>
         )}
       </div>
@@ -173,11 +173,7 @@ export const NewCommentForm: React.FC<Props> = ({ onSubmit, isSubmitting }) => {
 
         <div className="control">
           {/* eslint-disable-next-line react/button-has-type */}
-          <button
-            type="reset"
-            className="button is-link is-light"
-            onClick={resetForm}
-          >
+          <button type="reset" className="button is-link is-light">
             Clear
           </button>
         </div>

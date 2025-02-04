@@ -16,22 +16,23 @@ export const PostDetails: React.FC<Props> = ({ selectedPost }) => {
   const [comments, setComments] = useState<Comment[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isFormVisible, setIsFormVisible] = useState<boolean>(false);
-  const [err, setErr] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     setIsLoading(true);
     setComments([]);
     setIsFormVisible(false);
+    setError(null);
 
     client
       .get<Comment[]>(`/comments?postId=${selectedPost.id}`)
       .then(setComments)
-      .catch(() => setErr(true))
+      .catch(() => setError('Unable to load comments'))
       .finally(() => setIsLoading(false));
   }, [selectedPost]);
 
-  const addComment = (comment: Comment) => {
+  const addComment = (comment: Omit<Comment, 'id' | 'postId'>) => {
     setIsSubmitting(true);
     const { name, email, body } = comment;
 
@@ -43,14 +44,16 @@ export const PostDetails: React.FC<Props> = ({ selectedPost }) => {
         postId: selectedPost.id,
       })
       .then(newComment => setComments([...comments, newComment]))
-      .catch(() => setErr(true))
+      .catch(() => setError('Unable to add a comment'))
       .finally(() => setIsSubmitting(false));
   };
 
   const handleDeleteComment = (id: number) => {
     setComments(comments.filter(comment => comment.id !== id));
 
-    client.delete(`/comments/${id}`);
+    client
+      .delete(`/comments/${id}`)
+      .catch(() => setError('Unable to delete a comment'));
   };
 
   const hasComments = comments.length > 0;
@@ -67,9 +70,9 @@ export const PostDetails: React.FC<Props> = ({ selectedPost }) => {
 
       <div className="block">
         {isLoading && <Loader />}
-        {!isLoading && err ? (
+        {!isLoading && error ? (
           <div className="notification is-danger" data-cy="CommentsError">
-            Something went wrong
+            {error}
           </div>
         ) : (
           <>
