@@ -42,7 +42,7 @@ export const NewCommentForm: React.FC<Props> = ({ onSubmit, isSubmitting }) => {
     setHasEmailError(!emailRegex.test(email.trim()));
     setHasCommentError(!comment.trim());
 
-    if (!name.trim() || !email.trim() || !comment.trim()) {
+    if (!name.trim() || !emailRegex.test(email.trim()) || !comment.trim()) {
       return;
     }
 
